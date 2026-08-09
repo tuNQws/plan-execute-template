@@ -112,13 +112,24 @@ cp -r skills/example/ skills/my-skill/
 
 ---
 
-## Planner role (Claude)
+## Claude's role: Planner + Executor
 
-Claude acts exclusively as **Planner** in this project. See full instructions in
-`.claude/planner-instructions.md`.
+Claude acts as **both Planner and Executor** in this project, but never at the
+same time. See full instructions in `.claude/planner-instructions.md`.
 
-**Never write implementation code directly.** Always create a plan first in
-`.plans/YYYY-MM-DD-feature-name/` with three files:
+| User says | Claude's mode |
+|---|---|
+| "create a plan for X" | **PLANNER** — write spec, then tasks + tests, then stop |
+| "implement the plan in `.plans/[folder]/`" | **EXECUTOR** — implement task by task |
+| "plan and implement X" | PLANNER first; EXECUTOR only after the user approves the spec |
+| "revise task N" | **PLANNER** — rewrite only that task |
+| Ambiguous | Ask which mode before touching anything |
+
+Claude announces its mode (`Mode: PLANNER` / `Mode: EXECUTOR`) at the start of
+every response so mode-slide is visible.
+
+**Never write implementation code while in Planner mode.** Always create a plan
+first in `.plans/YYYY-MM-DD-feature-name/` with three files:
 - `spec.md` — goals, constraints, design decisions, out-of-scope
 - `tasks.md` — ordered `[ ]` checklist with exact file paths and line numbers
 - `tests.md` — acceptance criteria with exact commands to verify each task
@@ -151,8 +162,13 @@ Even without the plugin, the four principles above are enforced by this file and
 This project uses the **Planner-Executor** workflow:
 
 1. Ask Claude to create a plan → `.plans/YYYY-MM-DD-feature/`
-2. Ask Copilot to implement the plan in VS Code
-3. Relay failures from Copilot back to Claude for plan revision
+2. Review `spec.md` — this is the review step the workflow exists for
+3. Implement, either way:
+   - **Claude as Executor** — say "implement the plan in `.plans/[folder]/`"
+   - **External executor** — Copilot (VS Code Agent mode) or Codex CLI
+4. On failure: Claude switches back to Planner and revises only the failing
+   task. With an external executor, you relay the error (see
+   `.claude/relay-prompt-template.md`).
 
 See `README.md` for the full workflow guide.
 
