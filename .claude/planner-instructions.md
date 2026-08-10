@@ -13,20 +13,48 @@ exists to prevent.
 
 ---
 
+## Default behavior — plan first, then implement, without asking
+
+**The default for any work request is: PLANNER → EXECUTOR, automatically.**
+
+Write the plan (`spec.md` → `tasks.md` → `tests.md`), print the plan summary,
+then switch to Executor mode and implement it in the same response. Do **not**
+ask "plan mode or direct edit?" and do **not** stop to ask for approval.
+
+The only exceptions:
+- The user explicitly asks for a **direct edit** (see the escape hatch below)
+- The user explicitly asks for **plan only** ("create a plan", "chỉ lên plan",
+  "don't implement yet") — then write the plan and stop
+- The requirements are genuinely unclear — ask the clarifying question *about
+  the requirement*, not about which mode to use
+
+### Escape hatch: direct edit
+
+Skip planning and edit directly **only** when the prompt says so, e.g.:
+"edit direct", "direct edit", "sửa trực tiếp", "no plan", "khỏi plan",
+"skip the plan", "just change X directly", "quick fix, no plan".
+
+In that case announce `Mode: DIRECT EDIT`, make the smallest change that
+satisfies the request, and do not create a `.plans/` folder.
+
 ## Role: check this first
 
 | If the user says… | Your mode is… |
 |---|---|
+| "add / fix / build / change [anything]" (no mode named) | **PLANNER → EXECUTOR** — plan, then implement, no approval step |
 | "create a plan for [feature]" | **PLANNER** — write spec, then tasks + tests. Stop. |
 | "implement the plan in `.plans/[folder]/`" | **EXECUTOR** — implement task by task |
-| "plan and implement [feature]" | **PLANNER first**, then EXECUTOR after the user approves the spec |
+| "plan and implement [feature]" | **PLANNER → EXECUTOR** — the default flow |
 | "resume from task N" | **EXECUTOR** — re-read tasks.md, continue from task N |
 | "revise task N" | **PLANNER** — rewrite only that task, nothing else |
-| "just fix [small thing]" | Ask: plan first, or direct edit? Do not assume. |
-| Anything ambiguous | Ask which mode before touching anything |
+| "just fix [small thing]" | **PLANNER → EXECUTOR** — a small plan is still a plan |
+| "…direct edit / no plan / sửa trực tiếp" | **DIRECT EDIT** — no plan folder |
+| Requirement is ambiguous | Ask about the *requirement*, never about the mode |
 
-**Announce your mode** in the first line of your response: `Mode: PLANNER` or
-`Mode: EXECUTOR`. This makes accidental mode-slide visible to the user.
+**Announce your mode** in the first line of your response: `Mode: PLANNER`,
+`Mode: EXECUTOR`, or `Mode: DIRECT EDIT`. When the response covers both phases,
+announce the switch inline (`Mode: PLANNER` … then `Mode: EXECUTOR`). This makes
+accidental mode-slide visible to the user.
 
 ---
 
@@ -35,11 +63,12 @@ exists to prevent.
 **You may not write implementation code while in Planner mode.**
 **You may not redesign the plan while in Executor mode.**
 
-The transition from PLANNER → EXECUTOR requires an explicit signal from the
-user: they approve the spec, or they say "implement it", or "go ahead".
-Writing the plan does not authorize you to execute it.
+The transition from PLANNER → EXECUTOR is **automatic**, but the plan must be
+fully written to disk first. The boundary is about *sequence*, not permission:
+all three files exist and are final before the first line of implementation code
+is written.
 
-When you finish a plan, stop and say:
+When you finish a plan, always print this summary before switching:
 
 ```
 Plan written to .plans/YYYY-MM-DD-feature-name/
@@ -49,14 +78,18 @@ Plan written to .plans/YYYY-MM-DD-feature-name/
 
 Self-evaluation: X/10 (see rubric at bottom of spec.md)
 
-Review the spec. Say "implement" when you want me to switch to Executor mode.
+Switching to Executor mode. Stop me now if the spec is wrong.
 ```
 
-Then wait. Do not start implementing.
+Then switch to `Mode: EXECUTOR` and start the task loop.
 
-> **Why this matters:** the value of this workflow comes from the user reading
-> the spec before code exists. If you plan and implement in one breath, you have
-> deleted the review step and the plan is just narration of what you already did.
+**Stop and wait instead** only when the user asked for a plan only, or when the
+self-evaluation scores below 7/10 — a weak plan gets fixed, not executed.
+
+> **Why the plan still comes first:** writing `spec.md` before any code forces
+> the design decision to be explicit and leaves a reviewable record. The plan
+> must never be written *after* the code to describe what you already did — that
+> is falsifying the record, whether or not the user reviewed it.
 
 ---
 
@@ -67,9 +100,9 @@ must be corrected before moving on.
 
 ### 1. Think Before Planning
 Do not start writing `tasks.md` until `spec.md` is complete and the design is
-settled. If the user asks you to jump straight to tasks, write `spec.md` first
-and wait for confirmation. Unplanned code is the primary source of bugs and
-rework.
+settled. If the user asks you to jump straight to tasks — or straight to code —
+write `spec.md` first anyway, then continue. Unplanned code is the primary
+source of bugs and rework.
 
 > **Checklist before writing tasks.md:**
 > - [ ] The goal is stated in one clear paragraph

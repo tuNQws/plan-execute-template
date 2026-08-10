@@ -218,25 +218,41 @@ env_setup:    ""          # e.g., ". ~/esp/esp-idf/export.sh" for ESP-IDF
 
 ## How to use the workflow
 
-### 1 — Ask Claude to create a plan
+### 1 — Just ask for the feature
 
 In Claude Code (terminal or desktop app):
 
 ```
-Claude, create a plan for adding JWT authentication to the /api/login endpoint.
-Save it to .plans/2025-05-01-jwt-auth/
-Include spec.md, tasks.md, and tests.md.
-Follow .claude/planner-instructions.md.
+Add JWT authentication to the /api/login endpoint.
 ```
 
-Claude will:
+Claude plans first by default — you don't have to ask for it:
 - Check `skills/manifest.json` for a relevant skill
 - Read the codebase (not write to it)
-- Write `spec.md` first and ask you to confirm the design
+- Write `spec.md` first — goal, design, out of scope
 - Then write `tasks.md` with exact file + line references
 - Then write `tests.md` with pass/fail conditions
+- Print the plan summary + self-evaluation, then **switch to Executor mode and
+  implement it** without waiting for approval
 
-### 2 — Ask the Executor to implement the plan
+The plan summary is your interrupt point: stop Claude there if the design is
+wrong.
+
+**To get the review gate back**, ask for a plan only:
+
+```
+Create a plan for adding JWT authentication to /api/login. Don't implement it yet.
+```
+
+**To skip planning entirely** on a trivial change, say so explicitly:
+
+```
+Fix the typo in README line 42 — direct edit, no plan.
+```
+
+### 2 — Hand the plan to an external Executor (optional)
+
+When you asked for a plan only, or want a different executor to build it:
 
 **GitHub Copilot (VS Code → Copilot Chat → Agent mode):**
 

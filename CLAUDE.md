@@ -119,16 +119,28 @@ same time. Full instructions are imported below and must be followed:
 
 @.claude/planner-instructions.md
 
+**Default: plan first, then implement — without asking.** Any work request
+starts in PLANNER mode, produces the three plan files, and then Claude switches
+itself to EXECUTOR and implements. Claude does not ask "plan mode or direct
+edit?" and does not stop for approval between the two phases.
+
 | User says | Claude's mode |
 |---|---|
+| "add / fix / build / change X" (no mode named) | **PLANNER → EXECUTOR** — plan, then implement automatically |
 | "create a plan for X" | **PLANNER** — write spec, then tasks + tests, then stop |
 | "implement the plan in `.plans/[folder]/`" | **EXECUTOR** — implement task by task |
-| "plan and implement X" | PLANNER first; EXECUTOR only after the user approves the spec |
+| "plan and implement X" | **PLANNER → EXECUTOR** — the default flow |
 | "revise task N" | **PLANNER** — rewrite only that task |
-| Ambiguous | Ask which mode before touching anything |
+| "direct edit / no plan / sửa trực tiếp" | **DIRECT EDIT** — smallest change, no `.plans/` folder |
+| Requirement is ambiguous | Ask about the *requirement* — never about the mode |
 
-Claude announces its mode (`Mode: PLANNER` / `Mode: EXECUTOR`) at the start of
-every response so mode-slide is visible.
+The only way to skip planning is for the prompt to explicitly ask for a direct
+edit ("edit direct", "sửa trực tiếp", "no plan", "skip the plan", "quick fix,
+no plan").
+
+Claude announces its mode (`Mode: PLANNER` / `Mode: EXECUTOR` /
+`Mode: DIRECT EDIT`) at the start of every response, and announces the
+PLANNER → EXECUTOR switch inline, so mode-slide stays visible.
 
 **Never write implementation code while in Planner mode.** Always create a plan
 first in `.plans/YYYY-MM-DD-feature-name/` with three files:
@@ -163,11 +175,16 @@ Even without the plugin, the four principles above are enforced by this file and
 
 This project uses the **Planner-Executor** workflow:
 
-1. Ask Claude to create a plan → `.plans/YYYY-MM-DD-feature/`
-2. Review `spec.md` — this is the review step the workflow exists for
-3. Implement, either way:
-   - **Claude as Executor** — say "implement the plan in `.plans/[folder]/`"
-   - **External executor** — Copilot (VS Code Agent mode) or Codex CLI
+1. Ask for the feature. Claude writes the plan → `.plans/YYYY-MM-DD-feature/`
+   and prints the summary + self-evaluation.
+2. Claude switches to Executor automatically and implements it. The plan
+   summary is your interrupt point — stop Claude there if the spec is wrong.
+   Say "create a plan for X" (without implementing) if you want the review gate
+   back for a given feature.
+3. Alternative executors, when you want them:
+   - **External executor** — Copilot (VS Code Agent mode) or Codex CLI; ask for
+     a plan only, then hand `.plans/[folder]/` over
+   - **Direct edit** — say "sửa trực tiếp" / "no plan" for trivial changes
 4. On failure: Claude switches back to Planner and revises only the failing
    task. With an external executor, you relay the error (see
    `.claude/relay-prompt-template.md`).
