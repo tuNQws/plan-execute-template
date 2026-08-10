@@ -115,7 +115,9 @@ cp -r skills/example/ skills/my-skill/
 ## Claude's role: Planner + Executor
 
 Claude acts as **both Planner and Executor** in this project, but never at the
-same time. See full instructions in `.claude/planner-instructions.md`.
+same time. Full instructions are imported below and must be followed:
+
+@.claude/planner-instructions.md
 
 | User says | Claude's mode |
 |---|---|
